@@ -1,6 +1,6 @@
 <template>
   <div class="app">
-    <h1 class="main-title">Var Mısın Yok Musun Oyunu</h1>
+    <h1 class="main-title">Var Mısın Yok Musun?</h1>
     
     <div v-if="!gameStarted" class="setup beautiful-setup">
       <div class="setup-card">
@@ -26,7 +26,6 @@
     <div v-else-if="!gameOver" class="game">
       <div class="game-info">
         <h2>Sıra: {{ currentPlayer }}</h2>
-        <h3>Kalan Kutu: {{ selectedBox }}</h3>
       </div>
 
       <div class="boxes">
@@ -41,19 +40,19 @@
             <span>{{ box.number }}</span>
           </div>
           <div class="box-back">
-            <span>{{ box.value }} TL</span>
+            <span>{{ formatNumber(box.value) }} TL</span>
           </div>
         </div>
       </div>
     </div>
 
     <div v-else class="results">
-      <h2>Oyun Sonuçları</h2>
+      <h2>BUGUNUN ŞANSLI ŞAHSİYETİ :</h2>
       <div class="results-list">
         <div v-for="(result, index) in sortedResults" :key="index" class="result-item">
           <span class="rank">{{ index + 1 }}.</span>
           <span class="player-name">{{ result.player }}</span>
-          <span class="box-value">{{ result.value }} TL</span>
+          <span class="box-value">{{ formatNumber(result.value) }} TL</span>
         </div>
       </div>
       <button @click="resetGame" class="reset-btn ">Yeni Oyun</button>
@@ -101,23 +100,43 @@ export default {
     }
   },
   methods: {
+    formatNumber(number) {
+      if (number >= 1000) {
+        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+      return number;
+    },
     addPlayer() {
       this.players.push('')
     },
     startGame() {
       this.gameStarted = true
       this.gameOver = false
+      // Shuffle players array
+      this.players = this.players.sort(() => Math.random() - 0.5)
       this.currentPlayer = this.players[0]
       this.playerResults = []
       this.initializeBoxes()
     },
     initializeBoxes() {
-      this.boxes = Array.from({ length: 30 }, (_, i) => ({
-        number: i + 1,
-        value: Math.floor(Math.random() * 1000) + 1,
+      const prizeValues = [
+        1, 5, 10, 25, 50, 75, 100, 200, 300, 400, 500, 750, 1000,
+        2500, 5000, 7500, 10000, 15000, 20000, 25000, 30000, 40000,
+        50000, 60000, 75000, 100000, 150000, 200000, 250000, 500000
+      ];
+      
+      // Sayıları karıştır ve ilk 30'u al
+      const shuffledPrizes = [...prizeValues]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 30);
+      
+      // Kutuları oluştur
+      this.boxes = shuffledPrizes.map((value, index) => ({
+        number: index + 1,
+        value: value,
         selected: false,
         revealed: false
-      }))
+      }));
     },
     selectBox(box) {
       if (box.revealed || box.selected || this.showModal) return
@@ -450,6 +469,7 @@ export default {
 .results {
   text-align: center;
   padding: 20px;
+  color:white;
 }
 
 .results-list {
